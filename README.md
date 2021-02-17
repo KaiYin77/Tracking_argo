@@ -15,11 +15,13 @@ Instead of greedily matching sporadic detections, we solve a number of independe
 ```
 
 ## what I've Done
+![image1](https://github.com/KaiYin77/Tracking_argo/blob/main/pipeline.png)
 1.  一開始用Baseline code看Rviz時可以發現到detection的物體分成兩種，行人跟車，車子的部分又只有小型房車而已，其他如大客車、公車只有Lidar points的紋路，官方的Detection是沒有Detect到的，所以這類型的是沒辦法 Tracking的。這階段我還沒能力重新Train Model 把官方處理不好的Detection的部分重新處理，所以這次只針對Tracking的部分來嘗試跟發想。
 
 (發現Detection有提供類別的資訊，但Baseline code並沒有納入考慮，所以我就將他include到code裡面)
 
 2.  Watching the Rviz , I found that far away the SDC, the detection data is too bad to get a good tracking result, the car or pedestrian 3Dbox are rotating and emerge on again,  it’s not very stable. 
+![image1](https://github.com/KaiYin77/Tracking_argo/blob/main/3d-2d.png)
 
 將SDC從ego frame轉到city frame算出車子的位子丟到主程式裡，有了這個參數我就可以算距離了，dis是SDC到track_object的距離，我的想法是dis越大的，measurement error 會越大，所以我希望他的measurement matrix能動態的調整。
 
@@ -27,7 +29,7 @@ Instead of greedily matching sporadic detections, we solve a number of independe
 
 
 4.  一開始的想法是車子跟行人的行為模式差很多，在data associate上應該要分開討論，所以想怎麼讓兩者的最簡的行為模式考慮進去，我就嘗試了下面的方法。
-![image](picture or gif url)
+![image](https://github.com/KaiYin77/Tracking_argo/blob/main/iou.png)
 
 這邊的想法是，因為原算法是將Detection的3DBOX投影成2D的矩形，第一個想法是人跟車的移動行為非常不一樣，利用剛剛傳進來的Classname將人跟車分開處理，人的移動比較隨機，所以想說讓人在IOU的threshold小一點，這樣他比較不會把同一個人視為不同的人。我發現這個結果相對好很多，Tracking的accuracy指標有提升，id_switching次數也有下降，但precision結果下降。這樣的結果我覺得非常合理，threshold調降error上升。
 
